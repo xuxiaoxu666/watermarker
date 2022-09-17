@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/static/jQuery.js"></script>
+    <script src="/static/bootstrap-3.4.1-dist/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="/static/bootstrap-3.4.1-dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <h1 class="text-center">添加水印平台</h1>
+        <form action="" method="post" id="id_form">
+            {% csrf_token %}
+            <div class="col-md-4">
+                <label for="text">水印文字</label>
+                <input type="text" id="text" name="text" class="form-control">
+            </div>
+            <div class="col-md-2" style="top: 25px">
+                <input type="button" id="id_submit" class="btn btn-success" value="添加水印">
+            </div>
+
+            <div class="col-md-2 text-center" style="top: 25px">
+                <label for="id_add" class="text-danger">选择图片</label>
+                <input type="file" id="id_add" style="display: none">
+                <img src="../static/2.png" alt="" width="70" height="70" id="id_img">
+                <div style="right: 100px">
+                    <input type="button" id="add_img" class="btn btn-info" value="上传图片">
+                    <span class="has-error error"></span>
+                </div>
+            </div>
+
+            <div class="col-md-2" style="top: 25px">
+                <label for="id_select" class="text-danger">删除图片</label>
+                <input type="button" id="id_del" class="btn btn-danger" value="删除选中图片">
+            </div>
+
+            <div class="col-md-2 pull-right" style="top: 25px">
+                <label for="id_select" class="text-danger">全选</label>
+                <input type="checkbox" id="id_select">
+            </div>
+
+            <div class="panel panel-info" style="top: 1000px">
+                <div class="panel-heading " style="color: #ac2925"></div>
+                <table class="table text-center">
+                    <thead>
+                    <tr>
+                        <div class="col-md-1">
+                            <th class="text-center">编号</th>
+                        </div>
+                        <div class="col-md-8">
+                            <th class="text-center">图片</th>
+                        </div>
+                        <div class="col-md-3">
+                            <th class="text-center">添加水印</th>
+                        </div>
+
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for img in img_list %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td><img src="../media/img/{{ img }}" alt="" id="img"></td>
+                            <td>
+                                <label for="{{ forloop.counter }}">是否添加水印</label>
+                                <input type="checkbox" id="{{ forloop.counter }}" name="gx" value="{{ img }}"
+                                       class="select">
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $('#id_submit').click(function () {
+        let data = $('#id_form').serializeArray()
+        $.ajax({
+            url: '/handle/',
+            type: 'post',
+            data: data,
+            success: function (data) {
+                if (data) {
+                    location.href = '/handle/'
+                }
+            }
+        })
+    })
+
+    $("#id_select").click(function () {
+        // 这里是判断全选按钮是否被选中
+        console.log($(this).is(":checked"))
+        if ($(this).is(":checked") == true) {
+            // 选中class = select的标签
+            $(".select").each(function () {
+                // 通过prop()函数设置checkbox的状态
+                // 通过测试的出的结果是利用 attr() 函数进行一键选中和取消只有第一次有效，第二次就不会产生任何反应；而通过 prop() 函数则可以解决这个问题。
+                $(this).prop("checked", true);
+            })
+        } else {
+            $(".select").each(function () {
+                $(this).prop("checked", false);
+                console.log($(this).is(":checked"))
+            })
+        }
+    })
+
+
+    $('#id_add').change(function () {
+        let reader = new FileReader()
+        let img = $('#id_add')[0].files[0]
+        reader.readAsDataURL(img)
+        reader.onload = function () {
+            $('#id_img').attr('src', reader.result)
+        }
+    })
+
+    $('#add_img').click(function () {
+        let data = new FormData
+        data.append('img', $('#id_add')[0].files[0])
+        data.append('name', $('#id_add')[0].files[0].name)
+        data.append('csrfmiddlewaretoken', $("[name='csrfmiddlewaretoken']").val())
+        $.ajax({
+            url: '/add_img/',
+            type: 'post',
+            data: data,
+            processData: false,
+            contentType: false,
+            success: function (data) {
+                if (data.code == 100) {
+                    $('.error').html(data.msg)
+                    location.href = '/'
+                } else {
+                    console.log("1111")
+                    $('.error').html(data.msg)
+                }
+
+
+            }
+        })
+    })
+
+    $('#id_del').click(function () {
+        let data = $('#id_form').serializeArray()
+        console.log(data)
+        $.ajax({
+            url:'/del_img/',
+            type:'post',
+            data:data,
+            success: function () {
+                location.href = '/'
+            }
+        })
+    })
+</script>
+</body>
+</html>
